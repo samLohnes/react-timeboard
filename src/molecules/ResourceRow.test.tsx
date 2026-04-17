@@ -135,26 +135,4 @@ describe('ResourceRow', () => {
     expect(screen.queryByLabelText('e2')).toBeNull();
   });
 
-  it('forwards injected data-* attributes from cellDataAttributesByColumnIndex', () => {
-    const columns = makeColumns(3);
-    const cellAttrs = new Map<number, Record<string, string>>([[1, { 'data-over': 'true' }]]);
-    render(
-      <ResourceRow
-        resourceId="r1"
-        rowIndex={0}
-        columns={columns}
-        columnWidth={80}
-        laneHeight={28}
-        rowPadding={4}
-        eventMarginX={2}
-        events={[]}
-        eventLanes={new Map()}
-        eventSpans={new Map()}
-        cellDataAttributesByColumnIndex={cellAttrs}
-      />,
-    );
-    const cells = screen.getAllByRole('gridcell');
-    expect(cells[0]!.getAttribute('data-over')).toBeNull();
-    expect(cells[1]!.getAttribute('data-over')).toBe('true');
-  });
 });

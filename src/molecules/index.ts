@@ -6,3 +6,5 @@ export { ResourceRow, DefaultEventContent } from './ResourceRow';
 export type { ResourceRowProps } from './ResourceRow';
 export { Body } from './Body';
 export type { BodyProps } from './Body';
+export { DroppableCell } from './DroppableCell';
+export type { DroppableCellProps } from './DroppableCell';

@@ -24,33 +24,12 @@ export interface BodyProps<TEvent extends BaseEvent, TResource extends BaseResou
   renderEvent?: (event: TEvent) => React.ReactNode;
   onEventClick?: (event: TEvent, e: React.MouseEvent) => void;
   onCellClick?: (resourceId: string, date: Date) => void;
-  /** Drop-layer cell attributes keyed `${resourceId}___${columnIndex}`. */
-  cellDataAttributesByCell?: Map<string, Record<string, string>>;
 }
 
 const EMPTY_LANE_RESULT = {
   eventLanes: new Map<string, number>(),
   eventSpans: new Map<string, { startColumn: number; endColumn: number }>(),
 };
-
-/**
- * Builds the per-row cell-attribute map by stripping the resourceId prefix from the
- * global key. Returns `undefined` if no attrs apply to this row — keeps the molecule
- * from allocating empty Maps on every render of a row with no hover state.
- */
-function buildRowCellAttrs(
-  resourceId: string,
-  columnCount: number,
-  all: Map<string, Record<string, string>> | undefined,
-): Map<number, Record<string, string>> | undefined {
-  if (!all) return undefined;
-  const out = new Map<number, Record<string, string>>();
-  for (let i = 0; i < columnCount; i += 1) {
-    const attrs = all.get(`${resourceId}___${i}`);
-    if (attrs) out.set(i, attrs);
-  }
-  return out.size > 0 ? out : undefined;
-}
 
 function BodyImpl<TEvent extends BaseEvent, TResource extends BaseResource>({
   resources,
@@ -65,7 +44,6 @@ function BodyImpl<TEvent extends BaseEvent, TResource extends BaseResource>({
   renderEvent,
   onEventClick,
   onCellClick,
-  cellDataAttributesByCell,
 }: BodyProps<TEvent, TResource>) {
   return (
     <div
@@ -80,11 +58,6 @@ function BodyImpl<TEvent extends BaseEvent, TResource extends BaseResource>({
       {resources.map((resource, i) => {
         const resourceEvents = eventsByResource.get(resource.id) ?? [];
         const laneResult = laneResultsByResource.get(resource.id) ?? EMPTY_LANE_RESULT;
-        const cellAttrsForRow = buildRowCellAttrs(
-          resource.id,
-          columns.length,
-          cellDataAttributesByCell,
-        );
         return (
           <ResourceRow<TEvent>
             key={resource.id}
@@ -101,7 +74,6 @@ function BodyImpl<TEvent extends BaseEvent, TResource extends BaseResource>({
             renderEvent={renderEvent}
             onEventClick={onEventClick}
             onCellClick={onCellClick}
-            cellDataAttributesByColumnIndex={cellAttrsForRow}
           />
         );
       })}

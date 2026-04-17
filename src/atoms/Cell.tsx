@@ -14,24 +14,23 @@ export interface CellProps {
 }
 
 /** A single drop-target cell in the body's cell layer. */
-export const Cell = React.memo(function CellImpl({
-  columnIndex,
-  rowIndex,
-  isAlternateColumn,
-  onClick,
-  dataAttributes,
-  style,
-}: CellProps) {
-  const className = isAlternateColumn ? 'rtb-cell rtb-cell--alt' : 'rtb-cell';
-  return (
-    <div
-      role="gridcell"
-      aria-colindex={columnIndex + 1}
-      aria-rowindex={rowIndex + 1}
-      className={className}
-      onClick={onClick}
-      style={style}
-      {...dataAttributes}
-    />
-  );
-});
+export const Cell = React.memo(
+  React.forwardRef<HTMLDivElement, CellProps>(function CellImpl(
+    { columnIndex, rowIndex, isAlternateColumn, onClick, dataAttributes, style },
+    ref,
+  ) {
+    const className = isAlternateColumn ? 'rtb-cell rtb-cell--alt' : 'rtb-cell';
+    return (
+      <div
+        ref={ref}
+        role="gridcell"
+        aria-colindex={columnIndex + 1}
+        aria-rowindex={rowIndex + 1}
+        className={className}
+        onClick={onClick}
+        style={style}
+        {...dataAttributes}
+      />
+    );
+  }),
+);

@@ -1,9 +1,11 @@
 import * as React from 'react';
 import { useCallback, useMemo, useRef } from 'react';
+import { useDndMonitor } from '@dnd-kit/core';
 import { CornerCell, SpinnerOverlay } from './atoms';
 import { TimeAxis, Sidebar, Body } from './molecules';
 import { assignLanes, type LaneAssignmentResult } from './lib/lanes';
 import { generateColumns } from './lib/time';
+import { parseDropId } from './lib/dropId';
 import type { BaseEvent, BaseResource, ResourceTimelineProps } from './types';
 
 const DEFAULT_LANE_HEIGHT = 28;
@@ -31,6 +33,7 @@ function ResourceTimelineImpl<
     renderResource,
     onEventClick,
     onCellClick,
+    onExternalDrop,
     loading,
     ariaLabel,
   } = props;
@@ -99,6 +102,22 @@ function ResourceTimelineImpl<
       sidebarScrollRef.current.scrollTop = el.scrollTop;
     }
   }, []);
+
+  // Listen for drag-end events from the ancestor DndContext. We use `useDndMonitor`
+  // (not an owned DndContext) so consumers can keep draggables outside this component.
+  useDndMonitor({
+    onDragEnd: (event) => {
+      if (loading) return;
+      const overId = event.over?.id;
+      if (typeof overId !== 'string') return;
+      const parsed = parseDropId(overId);
+      if (!parsed) return;
+      // Only claim drops whose resourceId is in OUR resources list. Lets multiple
+      // ResourceTimelines coexist inside one DndContext without cross-firing.
+      if (!resources.some((r) => r.id === parsed.resourceId)) return;
+      onExternalDrop?.(event.active.data.current, parsed.resourceId, parsed.date);
+    },
+  });
 
   const rootClassName = loading ? 'rtb-root rtb-root--loading' : 'rtb-root';
   const resolvedHeight = typeof height === 'number' ? `${height}px` : height;

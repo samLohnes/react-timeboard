@@ -1,8 +1,13 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { DndContext } from '@dnd-kit/core';
 import { ResourceTimeline } from './ResourceTimeline';
 import type { BaseEvent, BaseResource } from './types';
+
+function renderWithDnd(ui: React.ReactElement) {
+  return render(<DndContext>{ui}</DndContext>);
+}
 
 const resources: BaseResource[] = [
   { id: 'r1', label: 'Court 1' },
@@ -21,7 +26,7 @@ function makeEvents(): BaseEvent[] {
 
 describe('ResourceTimeline', () => {
   it('renders the root grid with ariaLabel and an aria-rowcount of resources.length + 1', () => {
-    render(
+    renderWithDnd(
       <ResourceTimeline
         resources={resources}
         events={[]}
@@ -37,7 +42,7 @@ describe('ResourceTimeline', () => {
   });
 
   it('applies the height prop as a pixel string when given a number', () => {
-    const { container } = render(
+    const { container } = renderWithDnd(
       <ResourceTimeline
         resources={resources}
         events={[]}
@@ -51,7 +56,7 @@ describe('ResourceTimeline', () => {
   });
 
   it('passes through a string height verbatim (e.g. "80vh")', () => {
-    const { container } = render(
+    const { container } = renderWithDnd(
       <ResourceTimeline
         resources={resources}
         events={[]}
@@ -64,7 +69,7 @@ describe('ResourceTimeline', () => {
   });
 
   it('renders a sidebar label per resource using resource.label by default', () => {
-    render(
+    renderWithDnd(
       <ResourceTimeline
         resources={resources}
         events={[]}
@@ -78,7 +83,7 @@ describe('ResourceTimeline', () => {
   });
 
   it('uses renderResource when provided', () => {
-    render(
+    renderWithDnd(
       <ResourceTimeline
         resources={resources}
         events={[]}
@@ -92,7 +97,7 @@ describe('ResourceTimeline', () => {
   });
 
   it('renders events with lane-based positioning (overlapping events stack into separate lanes)', () => {
-    render(
+    renderWithDnd(
       <ResourceTimeline
         resources={resources}
         events={makeEvents()}
@@ -109,7 +114,7 @@ describe('ResourceTimeline', () => {
   });
 
   it('grows the resource row to fit the tallest lane stack', () => {
-    const { container } = render(
+    const { container } = renderWithDnd(
       <ResourceTimeline
         resources={resources}
         events={makeEvents()}
@@ -125,7 +130,7 @@ describe('ResourceTimeline', () => {
   });
 
   it('uses renderEvent when provided', () => {
-    render(
+    renderWithDnd(
       <ResourceTimeline
         resources={resources}
         events={makeEvents()}
@@ -141,7 +146,7 @@ describe('ResourceTimeline', () => {
 
   it('fires onEventClick with the typed event object', async () => {
     const onEventClick = vi.fn();
-    render(
+    renderWithDnd(
       <ResourceTimeline
         resources={resources}
         events={makeEvents()}
@@ -158,7 +163,7 @@ describe('ResourceTimeline', () => {
 
   it('fires onCellClick with resourceId and date', async () => {
     const onCellClick = vi.fn();
-    render(
+    renderWithDnd(
       <ResourceTimeline
         resources={resources}
         events={[]}
@@ -176,7 +181,7 @@ describe('ResourceTimeline', () => {
   });
 
   it('renders a spinner overlay and applies the loading class when loading={true}', () => {
-    const { container } = render(
+    const { container } = renderWithDnd(
       <ResourceTimeline
         resources={resources}
         events={[]}
@@ -191,7 +196,7 @@ describe('ResourceTimeline', () => {
   });
 
   it('does not render a spinner overlay by default', () => {
-    const { container } = render(
+    const { container } = renderWithDnd(
       <ResourceTimeline
         resources={resources}
         events={[]}
@@ -204,7 +209,7 @@ describe('ResourceTimeline', () => {
   });
 
   it('mirrors body scrollLeft to the time axis container on scroll', () => {
-    const { container } = render(
+    const { container } = renderWithDnd(
       <ResourceTimeline
         resources={resources}
         events={[]}

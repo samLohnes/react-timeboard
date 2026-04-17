@@ -1,5 +1,6 @@
 import * as React from 'react';
-import { Cell, EventBlock } from '../atoms';
+import { EventBlock } from '../atoms';
+import { DroppableCell } from './DroppableCell';
 import type { BaseEvent } from '../types';
 
 export interface ResourceRowProps<TEvent extends BaseEvent> {
@@ -18,8 +19,6 @@ export interface ResourceRowProps<TEvent extends BaseEvent> {
   renderEvent?: (event: TEvent) => React.ReactNode;
   onEventClick?: (event: TEvent, e: React.MouseEvent) => void;
   onCellClick?: (resourceId: string, date: Date) => void;
-  /** Per-cell data-* attributes injected by the drop layer (Task 7). */
-  cellDataAttributesByColumnIndex?: Map<number, Record<string, string>>;
 }
 
 /** Minimal default renderer. Consumers override via `renderEvent`. */
@@ -41,7 +40,6 @@ function ResourceRowImpl<TEvent extends BaseEvent>({
   renderEvent,
   onEventClick,
   onCellClick,
-  cellDataAttributesByColumnIndex,
 }: ResourceRowProps<TEvent>) {
   return (
     <div className="rtb-resource-row" role="row" style={{ position: 'relative' }}>
@@ -53,7 +51,7 @@ function ResourceRowImpl<TEvent extends BaseEvent>({
         }}
       >
         {columns.map((date, colIndex) => (
-          <Cell
+          <DroppableCell
             key={date.toISOString()}
             resourceId={resourceId}
             date={date}
@@ -61,7 +59,6 @@ function ResourceRowImpl<TEvent extends BaseEvent>({
             rowIndex={rowIndex}
             isAlternateColumn={colIndex % 2 === 1}
             onClick={onCellClick ? () => onCellClick(resourceId, date) : undefined}
-            dataAttributes={cellDataAttributesByColumnIndex?.get(colIndex)}
           />
         ))}
       </div>
