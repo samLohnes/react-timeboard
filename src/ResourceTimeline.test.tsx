@@ -230,6 +230,41 @@ describe('ResourceTimeline', () => {
     expect(timeAxis.scrollLeft).toBe(120);
     expect(sidebar.scrollTop).toBe(60);
   });
+
+  it('forwards wheel events on the sidebar to the body (scrolls the grid, not the page)', () => {
+    const { container } = renderWithDnd(
+      <ResourceTimeline
+        resources={resources}
+        events={[]}
+        timeRange={timeRange}
+        interval="hourly"
+        height={400}
+      />,
+    );
+    const body = container.querySelector('.rtb-body-container') as HTMLDivElement;
+    const sidebar = container.querySelector('.rtb-sidebar-container') as HTMLDivElement;
+    sidebar.dispatchEvent(new WheelEvent('wheel', { deltaY: 75, bubbles: true, cancelable: true }));
+    expect(body.scrollTop).toBe(75);
+  });
+
+  it('forwards wheel events on the time axis to the body in both axes', () => {
+    const { container } = renderWithDnd(
+      <ResourceTimeline
+        resources={resources}
+        events={[]}
+        timeRange={timeRange}
+        interval="hourly"
+        height={400}
+      />,
+    );
+    const body = container.querySelector('.rtb-body-container') as HTMLDivElement;
+    const timeAxis = container.querySelector('.rtb-time-axis-container') as HTMLDivElement;
+    timeAxis.dispatchEvent(
+      new WheelEvent('wheel', { deltaX: 90, deltaY: 30, bubbles: true, cancelable: true }),
+    );
+    expect(body.scrollLeft).toBe(90);
+    expect(body.scrollTop).toBe(30);
+  });
 });
 
 // -----------------------------------------------------------------------------

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useDndMonitor } from '@dnd-kit/core';
 import './styles.css';
 import { CornerCell, SpinnerOverlay } from './atoms';
@@ -144,6 +144,30 @@ function ResourceTimelineImpl<
     if (sidebarScrollRef.current) {
       sidebarScrollRef.current.scrollTop = el.scrollTop;
     }
+  }, []);
+
+  // Sidebar and time-axis containers are `overflow: hidden`, so wheel events
+  // over them would otherwise do nothing — or worse, bubble up to scroll the
+  // parent page. Forward wheel deltas to the body container so scrolling
+  // anywhere inside the grid moves the grid. React's synthetic onWheel is
+  // passive by default; attach native non-passive listeners so we can
+  // preventDefault and stop page-scroll.
+  useEffect(() => {
+    const body = bodyScrollRef.current;
+    const sidebar = sidebarScrollRef.current;
+    const timeAxis = timeAxisScrollRef.current;
+    if (!body) return;
+    const forward = (e: WheelEvent) => {
+      e.preventDefault();
+      body.scrollTop += e.deltaY;
+      body.scrollLeft += e.deltaX;
+    };
+    sidebar?.addEventListener('wheel', forward, { passive: false });
+    timeAxis?.addEventListener('wheel', forward, { passive: false });
+    return () => {
+      sidebar?.removeEventListener('wheel', forward);
+      timeAxis?.removeEventListener('wheel', forward);
+    };
   }, []);
 
   // Drops are only claimed if the target resource id is one of OUR visible rows;
