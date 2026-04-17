@@ -8,3 +8,7 @@ storybook-static/
 .env
 .env.*
 !.env.example
+
+# Local-only Storybook scratchpad (will be replaced by Task 10's stories/)
+.storybook/
+dev-stories/
