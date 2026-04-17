@@ -15,7 +15,9 @@
     "./styles.css": "./dist/styles.css"
   },
   "files": [
-    "dist"
+    "dist",
+    "README.md",
+    "LICENSE"
   ],
   "sideEffects": [
     "**/*.css"
@@ -66,12 +68,20 @@
     "scheduler",
     "gantt",
     "resource",
+    "grid",
+    "calendar",
     "dnd-kit",
-    "drag-and-drop"
+    "drag-and-drop",
+    "typescript"
   ],
   "license": "MIT",
+  "author": "Sam Lohnes",
   "repository": {
     "type": "git",
     "url": "https://github.com/samlohnes/react-timeboard.git"
+  },
+  "homepage": "https://github.com/samlohnes/react-timeboard#readme",
+  "bugs": {
+    "url": "https://github.com/samlohnes/react-timeboard/issues"
   }
 }
