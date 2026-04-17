@@ -1,0 +1,10 @@
+plans/
+.DS_Store
+node_modules/
+dist/
+coverage/
+storybook-static/
+*.log
+.env
+.env.*
+!.env.example

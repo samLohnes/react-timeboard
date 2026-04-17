@@ -1,0 +1,70 @@
+{
+  "name": "react-timeboard",
+  "version": "0.0.1",
+  "description": "A resource × time grid component with external drag-and-drop support.",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
+    },
+    "./styles.css": "./dist/styles.css"
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "scripts": {
+    "build": "vite build && tsc -p tsconfig.build.json --emitDeclarationOnly",
+    "test": "TZ=America/Los_Angeles vitest run --passWithNoTests",
+    "test:watch": "TZ=America/Los_Angeles vitest --passWithNoTests",
+    "lint": "eslint \"src/**/*.{ts,tsx}\" \"stories/**/*.{ts,tsx}\" --no-error-on-unmatched-pattern",
+    "format": "prettier --write \"src/**/*.{ts,tsx,css}\" \"stories/**/*.{ts,tsx}\"",
+    "typecheck": "tsc --noEmit",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
+  },
+  "peerDependencies": {
+    "@dnd-kit/core": ">=6",
+    "react": ">=17",
+    "react-dom": ">=17"
+  },
+  "devDependencies": {
+    "@dnd-kit/core": "^6.1.0",
+    "@types/node": "^25.6.0",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "eslint": "^8.57.0",
+    "eslint-plugin-react": "^7.34.0",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "prettier": "^3.2.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "typescript": "^5.4.0",
+    "vite": "^5.2.0",
+    "vite-plugin-dts": "^3.8.0",
+    "vitest": "^1.4.0"
+  },
+  "keywords": [
+    "react",
+    "timeline",
+    "scheduler",
+    "gantt",
+    "resource",
+    "dnd-kit",
+    "drag-and-drop"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/samlohnes/react-timeboard.git"
+  }
+}
