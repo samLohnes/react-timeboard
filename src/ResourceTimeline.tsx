@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { useDndMonitor } from '@dnd-kit/core';
+import './styles.css';
 import { CornerCell, SpinnerOverlay } from './atoms';
 import { TimeAxis, Sidebar, Body } from './molecules';
 import { assignLanes, type LaneAssignmentResult } from './lib/lanes';

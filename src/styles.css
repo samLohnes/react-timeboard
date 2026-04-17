@@ -1,1 +1,378 @@
-/* react-timeboard styles. Populated in Task 9. */
+/* react-timeboard default stylesheet.
+ *
+ * Every styled value is a --rtb-* custom property so consumers can theme the
+ * grid without writing selector overrides. Everything is scoped under
+ * `.rtb-root` so the library never leaks styles onto unrelated elements.
+ *
+ * For layout dimensions (column width, lane height, row padding, group header
+ * height), overriding the CSS variable is only half the job — the matching JS
+ * prop must also be set on <ResourceTimeline>. See README for details.
+ */
+
+.rtb-root {
+  /* -------- Layout -------- */
+  --rtb-sidebar-width: 180px;
+  --rtb-time-axis-height: 40px;
+  --rtb-row-padding: 4px;
+  --rtb-event-lane-height: 28px;
+
+  /* -------- Typography --------
+   * Intentionally a system-font stack. A library should inherit the host
+   * app's type; distinctive typography belongs to individual apps. */
+  --rtb-font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --rtb-font-size-base: 14px;
+
+  /* -------- Neutrals -------- */
+  --rtb-border: #e4e4e7;
+  --rtb-bg: #ffffff;
+  --rtb-text: #18181b;
+  --rtb-text-muted: #71717a;
+
+  /* -------- Cells -------- */
+  --rtb-cell-bg: var(--rtb-bg);
+  --rtb-cell-bg-alt: #fafafa;
+  --rtb-cell-border: var(--rtb-border);
+  --rtb-cell-hover-bg: rgba(74, 144, 226, 0.15);
+
+  /* -------- Events -------- */
+  --rtb-event-bg: #4a90e2;
+  --rtb-event-text: #ffffff;
+  --rtb-event-radius: 4px;
+  --rtb-event-padding: 4px 8px;
+  --rtb-event-hover-brightness: 1.1;
+  /* Horizontal inset, read by JS via the `eventMarginX` derivation. Setting
+   * this variable alone will NOT change event bounds — pass the matching
+   * prop to <ResourceTimeline> to keep JS math aligned. */
+  --rtb-event-margin-x: 2px;
+
+  /* -------- Sidebar -------- */
+  --rtb-sidebar-bg: #f7f7f8;
+  --rtb-sidebar-text: var(--rtb-text);
+  --rtb-sidebar-padding: 8px 12px;
+  --rtb-sidebar-border: var(--rtb-border);
+  --rtb-sidebar-font-size: var(--rtb-font-size-base);
+  --rtb-sidebar-font-weight: 500;
+
+  /* -------- Time axis -------- */
+  --rtb-time-axis-bg: #f7f7f8;
+  --rtb-time-axis-text: var(--rtb-text-muted);
+  --rtb-time-axis-padding: 8px 4px;
+  --rtb-time-axis-border: var(--rtb-border);
+  --rtb-time-axis-font-size: 12px;
+
+  /* -------- Corner -------- */
+  --rtb-corner-bg: #f0f0f1;
+  --rtb-corner-border: var(--rtb-border);
+
+  /* -------- Loading -------- */
+  --rtb-loading-overlay-bg: rgba(255, 255, 255, 0.6);
+  --rtb-loading-dim-opacity: 0.4;
+  --rtb-spinner-color: #4a90e2;
+  --rtb-spinner-size: 32px;
+
+  /* -------- Focus -------- */
+  --rtb-focus-outline: 2px solid #4a90e2;
+  --rtb-focus-outline-offset: 2px;
+
+  /* -------- Group headers (Task 8) -------- */
+  --rtb-group-header-height: 36px;
+  --rtb-group-header-bg: #f0f0f1;
+  --rtb-group-header-hover-bg: #e8e8e9;
+  --rtb-group-header-text: var(--rtb-text);
+  --rtb-group-header-font-weight: 600;
+  --rtb-group-header-font-size: var(--rtb-font-size-base);
+  --rtb-group-header-padding: 0 12px;
+  --rtb-group-header-border: var(--rtb-border);
+  --rtb-group-header-chevron-size: 10px;
+  --rtb-group-header-chevron-color: var(--rtb-text-muted);
+
+  /* Base styles */
+  font-family: var(--rtb-font-family);
+  font-size: var(--rtb-font-size-base);
+  color: var(--rtb-text);
+  background: var(--rtb-bg);
+  box-sizing: border-box;
+  position: relative;
+}
+
+.rtb-root *,
+.rtb-root *::before,
+.rtb-root *::after {
+  box-sizing: inherit;
+}
+
+/* ============================================================
+ * Corner
+ * ============================================================ */
+
+.rtb-corner-container {
+  background: var(--rtb-corner-bg);
+  border-right: 1px solid var(--rtb-corner-border);
+  border-bottom: 1px solid var(--rtb-corner-border);
+}
+
+.rtb-corner {
+  width: 100%;
+  height: 100%;
+}
+
+/* ============================================================
+ * Time axis
+ * ============================================================ */
+
+.rtb-time-axis-container {
+  background: var(--rtb-time-axis-bg);
+  border-bottom: 1px solid var(--rtb-time-axis-border);
+}
+
+.rtb-time-axis {
+  height: 100%;
+}
+
+.rtb-time-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--rtb-time-axis-font-size);
+  color: var(--rtb-time-axis-text);
+  padding: var(--rtb-time-axis-padding);
+  border-right: 1px solid var(--rtb-time-axis-border);
+  user-select: none;
+}
+
+/* ============================================================
+ * Sidebar
+ * ============================================================ */
+
+.rtb-sidebar-container {
+  background: var(--rtb-sidebar-bg);
+  border-right: 1px solid var(--rtb-sidebar-border);
+}
+
+.rtb-sidebar {
+  width: 100%;
+}
+
+.rtb-resource-label {
+  display: flex;
+  align-items: center;
+  padding: var(--rtb-sidebar-padding);
+  font-size: var(--rtb-sidebar-font-size);
+  font-weight: var(--rtb-sidebar-font-weight);
+  color: var(--rtb-sidebar-text);
+  border-bottom: 1px solid var(--rtb-sidebar-border);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ============================================================
+ * Body
+ * ============================================================ */
+
+.rtb-body-container {
+  background: var(--rtb-bg);
+}
+
+.rtb-body {
+  position: relative;
+}
+
+.rtb-resource-row {
+  border-bottom: 1px solid var(--rtb-cell-border);
+}
+
+.rtb-cells-layer {
+  height: 100%;
+}
+
+.rtb-cell {
+  background: var(--rtb-cell-bg);
+  border-right: 1px solid var(--rtb-cell-border);
+  cursor: default;
+  transition: background-color 120ms ease-out;
+}
+
+.rtb-cell--alt {
+  background: var(--rtb-cell-bg-alt);
+}
+
+.rtb-cell[data-over="true"] {
+  background: var(--rtb-cell-hover-bg);
+}
+
+.rtb-events-layer {
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+/* ============================================================
+ * Event block
+ * ============================================================ */
+
+.rtb-event {
+  background: var(--rtb-event-bg);
+  color: var(--rtb-event-text);
+  border-radius: var(--rtb-event-radius);
+  padding: var(--rtb-event-padding);
+  font-size: var(--rtb-font-size-base);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  /* Horizontal inset applied in JS via `eventMarginX` (see Task 5).
+   * Do NOT set margin-left / margin-right here — mixing CSS margin with
+   * absolute positioning (explicit left + width) has inconsistent
+   * cross-browser behavior. */
+  cursor: pointer;
+  user-select: none;
+  transition: filter 120ms ease-out;
+}
+
+.rtb-event:hover {
+  filter: brightness(var(--rtb-event-hover-brightness));
+}
+
+.rtb-event:focus-visible {
+  outline: var(--rtb-focus-outline);
+  outline-offset: var(--rtb-focus-outline-offset);
+}
+
+.rtb-event__default-text {
+  display: inline-block;
+}
+
+/* ============================================================
+ * Group header (Resource Groups — Task 8)
+ *
+ * Two locations:
+ *  1. Sidebar: chevron <button> + label span. Only the button toggles.
+ *  2. Body: full-width visual band that mirrors the sidebar header
+ *     (`.rtb-group-header-body`). It has pointer-events:none and no
+ *     cells, so drags never land on it.
+ * ============================================================ */
+
+.rtb-group-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: var(--rtb-group-header-height);
+  padding: var(--rtb-group-header-padding);
+  background: var(--rtb-group-header-bg);
+  color: var(--rtb-group-header-text);
+  font-weight: var(--rtb-group-header-font-weight);
+  font-size: var(--rtb-group-header-font-size);
+  border-bottom: 1px solid var(--rtb-group-header-border);
+  user-select: none;
+  /* Row itself is NOT clickable — no cursor:pointer. Only the inner button
+   * toggles expansion. Prevents accidental toggles from custom header content. */
+}
+
+.rtb-group-header__chevron {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: calc(var(--rtb-group-header-chevron-size) + 8px);
+  height: calc(var(--rtb-group-header-chevron-size) + 8px);
+  color: var(--rtb-group-header-chevron-color);
+  font-size: var(--rtb-group-header-chevron-size);
+  line-height: 1;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: background-color 120ms ease-out;
+}
+
+.rtb-group-header__chevron:hover {
+  background: var(--rtb-group-header-hover-bg);
+}
+
+.rtb-group-header__chevron:focus-visible {
+  outline: var(--rtb-focus-outline);
+  outline-offset: 2px;
+}
+
+.rtb-group-header__label {
+  flex: 1 1 auto;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rtb-group-header-body {
+  height: var(--rtb-group-header-height);
+  background: var(--rtb-group-header-bg);
+  border-bottom: 1px solid var(--rtb-group-header-border);
+  /* No drop target; drags pass through to any visible cells below. */
+  pointer-events: none;
+}
+
+/* ============================================================
+ * Loading overlay
+ * ============================================================ */
+
+.rtb-root--loading > .rtb-corner-container,
+.rtb-root--loading > .rtb-time-axis-container,
+.rtb-root--loading > .rtb-sidebar-container,
+.rtb-root--loading > .rtb-body-container {
+  opacity: var(--rtb-loading-dim-opacity);
+  pointer-events: none;
+}
+
+.rtb-loading-overlay {
+  position: absolute;
+  inset: 0;
+  background: var(--rtb-loading-overlay-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.rtb-spinner {
+  width: var(--rtb-spinner-size);
+  height: var(--rtb-spinner-size);
+  border: 3px solid rgba(0, 0, 0, 0.1);
+  border-top-color: var(--rtb-spinner-color);
+  border-radius: 50%;
+  animation: rtb-spin 0.9s linear infinite;
+}
+
+@keyframes rtb-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ============================================================
+ * Cell focus
+ * ============================================================ */
+
+.rtb-cell:focus-visible {
+  outline: var(--rtb-focus-outline);
+  outline-offset: -2px;
+  z-index: 1;
+  position: relative;
+}
+
+/* ============================================================
+ * Reduced motion
+ *
+ * Don't remove animations entirely — users still need visible loading
+ * feedback. Slow the spinner enough to be non-distracting.
+ * ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .rtb-cell,
+  .rtb-event,
+  .rtb-group-header__chevron {
+    transition: none;
+  }
+  .rtb-spinner {
+    animation-duration: 3s;
+  }
+}
