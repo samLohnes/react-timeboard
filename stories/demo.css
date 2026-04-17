@@ -246,6 +246,8 @@
 
 .status-bar__center {
   text-align: center;
+  display: flex;
+  justify-content: center;
 }
 
 .status-bar__time {
@@ -253,6 +255,48 @@
   font-size: 12px;
   letter-spacing: 0.16em;
   color: var(--demo-text-secondary);
+}
+
+/* ---------- View toggle ---------- */
+.view-toggle {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  background: var(--demo-bg-deep);
+  border: 1px solid var(--demo-border);
+  border-radius: 2px;
+}
+
+.view-toggle__option {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  padding: 6px 18px;
+  font-family: var(--demo-font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--demo-text-secondary);
+  cursor: pointer;
+  border-radius: 1px;
+  transition: background-color 120ms ease-out, color 120ms ease-out;
+}
+
+.view-toggle__option:hover {
+  color: var(--demo-text-primary);
+}
+
+.view-toggle__option--active {
+  background: var(--demo-accent-signal);
+  color: var(--demo-bg-deep);
+  font-weight: 700;
+  box-shadow: 0 0 12px rgba(77, 227, 140, 0.3);
+}
+
+.view-toggle__option:focus-visible {
+  outline: 2px solid var(--demo-accent-signal);
+  outline-offset: 1px;
 }
 
 .status-bar__right {
@@ -487,6 +531,91 @@
   to {
     opacity: 1;
   }
+}
+
+/* ---------- Channel booking card (channels view) ---------- */
+.channel-booking {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 100%;
+  padding: 0 12px;
+  background: var(--demo-bg-raised);
+  border: 1px solid var(--demo-accent-signal);
+  border-left: 3px solid var(--demo-accent-signal);
+  border-radius: 2px;
+  overflow: hidden;
+  box-shadow: 0 0 0 1px rgba(77, 227, 140, 0.1);
+  animation: card-settle 200ms ease-out both;
+}
+
+.channel-booking__sport {
+  font-size: 16px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.channel-booking__matchup {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--demo-font-display);
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--demo-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.channel-booking__time {
+  font-family: var(--demo-font-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--demo-text-dim);
+  text-transform: uppercase;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ---------- Channel legend (channels view sidebar) ---------- */
+.channel-legend-item {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--demo-bg-elevated);
+  border: 1px solid var(--demo-border-strong);
+  border-left: 3px solid var(--chip-brand);
+  border-radius: 2px;
+  font-family: var(--demo-font-mono);
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--demo-text-primary);
+}
+
+.channel-legend-item__label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.channel-legend-item__count {
+  font-family: var(--demo-font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--demo-accent-signal);
+  padding: 3px 8px;
+  background: var(--demo-bg-deep);
+  border: 1px solid rgba(77, 227, 140, 0.25);
+  border-radius: 1px;
+  min-width: 28px;
+  text-align: center;
 }
 
 /* ---------- Toast ---------- */

@@ -30,6 +30,13 @@ export const SPORT_GROUPS: ResourceGroup[] = [
   { id: 'soccer', label: '⚽ Soccer' },
 ];
 
+/** Network groups used when the demo is flipped to a channels-per-row view. */
+export const NETWORK_GROUPS: ResourceGroup[] = [
+  { id: 'ESPN', label: '📡 ESPN' },
+  { id: 'Turner', label: '📡 Turner Sports' },
+  { id: 'CBS', label: '📡 CBS' },
+];
+
 function makeTime(hour: number, minute = 0): Date {
   return new Date(2024, 2, 15, hour, minute);
 }

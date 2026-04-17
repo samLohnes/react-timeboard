@@ -1,9 +1,14 @@
+import type { ReactNode } from 'react';
+
 export function StatusBar({
   unassignedCount,
   totalCount,
+  children,
 }: {
   unassignedCount: number;
   totalCount: number;
+  /** Center slot — e.g., a ViewToggle. If omitted, shows the demo date. */
+  children?: ReactNode;
 }) {
   const assigned = totalCount - unassignedCount;
   const complete = unassignedCount === 0;
@@ -15,7 +20,7 @@ export function StatusBar({
         <span className="status-bar__label">LIVE BOARD</span>
       </div>
       <div className="status-bar__center">
-        <time className="status-bar__time">MARCH 15 · 2024</time>
+        {children ?? <time className="status-bar__time">MARCH 15 · 2024</time>}
       </div>
       <div className={rightClass}>
         <span className="status-bar__count">
