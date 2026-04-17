@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { ResourceTimeline, useTimeboardDraggable } from '../../src';
+import { DragPreview } from '../DragPreview';
 import {
   THEME_GROUPS,
   THEME_RESOURCES,
@@ -7,7 +8,9 @@ import {
 } from './shared-data';
 import { useThemeDemoState, type DraggedTemplate } from './useThemeDemoState';
 
-const TEMPLATES: Array<DraggedTemplate & { emoji: string }> = [
+type SoftTemplate = DraggedTemplate & { emoji: string };
+
+const TEMPLATES: SoftTemplate[] = [
   { id: 'one-on-one', label: '1:1 meeting', durationHours: 1, emoji: '☕' },
   { id: 'focus', label: 'Focus time', durationHours: 2, emoji: '🎧' },
   { id: 'coffee', label: 'Coffee chat', durationHours: 1, emoji: '🌱' },
@@ -112,6 +115,13 @@ const THEME_STYLES = `
 
 .theme-soft-chip:active {
   cursor: grabbing;
+}
+
+.theme-soft-chip--dragging {
+  cursor: grabbing;
+  transform: scale(1.03) rotate(-2deg);
+  box-shadow: 0 24px 60px -16px rgba(42, 58, 51, 0.28);
+  border-color: #4ca782;
 }
 
 .theme-soft-chip__emoji {
@@ -240,23 +250,9 @@ const THEME_STYLES = `
 }
 `;
 
-function SoftChip({
-  template,
-}: {
-  template: DraggedTemplate & { emoji: string };
-}) {
-  const { setNodeRef, attributes, listeners, isDragging, dragStyle } = useTimeboardDraggable({
-    id: `soft-${template.id}`,
-    data: template,
-  });
+function SoftChipContent({ template }: { template: SoftTemplate }) {
   return (
-    <div
-      ref={setNodeRef}
-      {...attributes}
-      {...listeners}
-      className="theme-soft-chip"
-      style={{ ...dragStyle, opacity: isDragging ? 0.4 : 1 }}
-    >
+    <>
       <span className="theme-soft-chip__emoji" aria-hidden="true">
         {template.emoji}
       </span>
@@ -266,6 +262,32 @@ function SoftChip({
           {template.durationHours}h
         </span>
       </span>
+    </>
+  );
+}
+
+function SoftChip({ template }: { template: SoftTemplate }) {
+  const { setNodeRef, attributes, listeners, isDragging } = useTimeboardDraggable({
+    id: `soft-${template.id}`,
+    data: template,
+  });
+  return (
+    <div
+      ref={setNodeRef}
+      {...attributes}
+      {...listeners}
+      className="theme-soft-chip"
+      style={{ opacity: isDragging ? 0.3 : 1 }}
+    >
+      <SoftChipContent template={template} />
+    </div>
+  );
+}
+
+function SoftChipOverlay({ template }: { template: SoftTemplate }) {
+  return (
+    <div className="theme-soft-chip theme-soft-chip--dragging">
+      <SoftChipContent template={template} />
     </div>
   );
 }
@@ -319,6 +341,9 @@ export const Default: StoryObj = {
                 />
               </div>
             </div>
+            <DragPreview<SoftTemplate>
+              render={(t) => <SoftChipOverlay template={t} />}
+            />
           </div>
         </>
       );

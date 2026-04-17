@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { ResourceTimeline, useTimeboardDraggable } from '../../src';
+import { DragPreview } from '../DragPreview';
 import {
   THEME_GROUPS,
   THEME_RESOURCES,
@@ -102,6 +103,13 @@ const THEME_STYLES = `
 
 .theme-editorial-chip:active {
   cursor: grabbing;
+}
+
+.theme-editorial-chip--dragging {
+  cursor: grabbing;
+  background: #fbf8f3;
+  box-shadow: 0 20px 50px -12px rgba(74, 52, 24, 0.35);
+  transform: rotate(-1deg);
 }
 
 .theme-editorial-chip__label {
@@ -221,8 +229,19 @@ const THEME_STYLES = `
 }
 `;
 
+function EditorialChipContent({ template }: { template: DraggedTemplate }) {
+  return (
+    <>
+      <span className="theme-editorial-chip__label">{template.label}</span>
+      <span className="theme-editorial-chip__duration">
+        {template.durationHours}h
+      </span>
+    </>
+  );
+}
+
 function EditorialChip({ template }: { template: DraggedTemplate }) {
-  const { setNodeRef, attributes, listeners, isDragging, dragStyle } = useTimeboardDraggable({
+  const { setNodeRef, attributes, listeners, isDragging } = useTimeboardDraggable({
     id: `editorial-${template.id}`,
     data: template,
   });
@@ -232,12 +251,17 @@ function EditorialChip({ template }: { template: DraggedTemplate }) {
       {...attributes}
       {...listeners}
       className="theme-editorial-chip"
-      style={{ ...dragStyle, opacity: isDragging ? 0.4 : 1 }}
+      style={{ opacity: isDragging ? 0.3 : 1 }}
     >
-      <span className="theme-editorial-chip__label">{template.label}</span>
-      <span className="theme-editorial-chip__duration">
-        {template.durationHours}h
-      </span>
+      <EditorialChipContent template={template} />
+    </div>
+  );
+}
+
+function EditorialChipOverlay({ template }: { template: DraggedTemplate }) {
+  return (
+    <div className="theme-editorial-chip theme-editorial-chip--dragging">
+      <EditorialChipContent template={template} />
     </div>
   );
 }
@@ -293,6 +317,9 @@ export const Default: StoryObj = {
                 />
               </div>
             </div>
+            <DragPreview<DraggedTemplate>
+              render={(t) => <EditorialChipOverlay template={t} />}
+            />
           </div>
         </>
       );

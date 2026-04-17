@@ -171,30 +171,48 @@ Define a dark-mode theme by overriding variables inside a media query:
 ## Exports
 
 - `ResourceTimeline` — the main component.
-- `useTimeboardDraggable` — convenience hook wrapping `@dnd-kit/core`'s `useDraggable`.
-- `TimeboardDragPreview` — portalled drag-preview component (see below).
-- Types: `BaseEvent`, `BaseResource`, `ResourceGroup`, `IntervalMode`, `ResourceTimelineProps`, `UseTimeboardDraggableOptions`, `TimeboardDragPreviewProps`.
+- `useTimeboardDraggable` — convenience hook wrapping `@dnd-kit/core`'s `useDraggable`. Its library-specific value is a guard that throws if your draggable `id` contains the `___` separator reserved for cell drop IDs.
+- Types: `BaseEvent`, `BaseResource`, `ResourceGroup`, `IntervalMode`, `ResourceTimelineProps`, `UseTimeboardDraggableOptions`.
 
 No `VERSION` export — read it from your own `package.json` if you need it.
 
-## Drag preview (cursor-follow without clipping)
+The library intentionally stops at drop targets. How your draggable sources look, where they live, and how they animate during drag are your concerns — not the library's. The recipe below shows the pattern we recommend.
 
-By default, `useTimeboardDraggable` returns a `dragStyle` that translates the *source* element with the cursor. That works in simple layouts but **gets clipped** the moment the source sits inside a container with `overflow: auto` or `overflow: hidden` (a scrollable sidebar, a bounded card, etc.).
+## Recipe: drag preview that follows the cursor without clipping
 
-The fix is `<TimeboardDragPreview>`, which portals a preview to `document.body` so nothing can clip it:
+By default, `useTimeboardDraggable` returns a `dragStyle` that translates the *source* element with the cursor. That works in simple layouts but **gets clipped** the moment the source sits inside a container with `overflow: auto` or `overflow: hidden` — a scrollable sidebar, a bounded card, a virtualized list. Any of these cuts off the dragged chip mid-move and makes the drag UX look broken.
+
+The fix is `@dnd-kit/core`'s `<DragOverlay>`, which portals a preview to `document.body` so nothing can clip it. Wire it up with a tiny component of your own:
+
+```tsx
+import { DragOverlay, useDndMonitor } from '@dnd-kit/core';
+import { useState, type ReactNode } from 'react';
+
+function DragPreview<T>({ render }: { render: (active: T) => ReactNode }) {
+  const [active, setActive] = useState<T | null>(null);
+  useDndMonitor({
+    onDragStart: (e) => setActive((e.active.data.current as T) ?? null),
+    onDragEnd: () => setActive(null),
+    onDragCancel: () => setActive(null),
+  });
+  return (
+    <DragOverlay dropAnimation={null}>
+      {active ? render(active) : null}
+    </DragOverlay>
+  );
+}
+```
+
+Usage — render `<DragPreview>` inside your `<DndContext>`, alongside (not inside) the `ResourceTimeline`:
 
 ```tsx
 import { DndContext } from '@dnd-kit/core';
-import {
-  ResourceTimeline,
-  useTimeboardDraggable,
-  TimeboardDragPreview,
-} from 'react-timeboard';
+import { ResourceTimeline, useTimeboardDraggable } from 'react-timeboard';
 
 interface Template { id: string; label: string }
 
 function TemplateChip({ template }: { template: Template }) {
-  // Ignore `dragStyle` when using TimeboardDragPreview — the preview handles motion.
+  // When using <DragPreview>, ignore `dragStyle` — the preview handles motion.
   // Use `isDragging` to fade the source so it reads as a "slot" during drag.
   const { setNodeRef, attributes, listeners, isDragging } = useTimeboardDraggable({
     id: `tpl-${template.id}`,
@@ -212,10 +230,6 @@ function TemplateChip({ template }: { template: Template }) {
   );
 }
 
-function TemplatePreview({ template }: { template: Template }) {
-  return <div className="chip chip--dragging">{template.label}</div>;
-}
-
 function App() {
   return (
     <DndContext>
@@ -223,15 +237,17 @@ function App() {
         {templates.map((t) => <TemplateChip key={t.id} template={t} />)}
       </aside>
       <ResourceTimeline {/* ... */} />
-      <TimeboardDragPreview<Template>
-        render={(t) => <TemplatePreview template={t} />}
+      <DragPreview<Template>
+        render={(t) => <div className="chip chip--dragging">{t.label}</div>}
       />
     </DndContext>
   );
 }
 ```
 
-`TimeboardDragPreview` accepts one prop: `render(active: T) => ReactNode`. It only renders content while a drag is in progress; otherwise it returns nothing. Use **either** `dragStyle` from the hook **or** `TimeboardDragPreview`, not both — combining them causes double-movement.
+Use **either** `dragStyle` from the hook **or** `<DragPreview>`, not both — combining them causes double-movement.
+
+Why copy-paste instead of a library import? `<DragPreview>` is pure `@dnd-kit/core` composition — nothing about it is specific to time grids. Shipping it as part of this library would lock you into our opinions (hardcoded `dropAnimation={null}`, no control over the portal target, etc.). The ~15 lines above are easier to own than to fight.
 
 ## Resource Groups
 

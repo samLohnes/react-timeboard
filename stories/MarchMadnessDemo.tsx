@@ -8,6 +8,8 @@ import {
   SPORT_GROUPS,
 } from './demo-data';
 import type { BroadcastGame, Channel } from './demo-data';
+import { ChannelChipOverlay } from './ChannelChip';
+import { DragPreview } from './DragPreview';
 import { ChannelSidebar } from './ChannelSidebar';
 import { GameEventCard } from './GameEventCard';
 import { StatusBar } from './StatusBar';
@@ -125,6 +127,7 @@ export function MarchMadnessDemo({
         </div>
       </div>
       {toast && <Toast message={toast} />}
+      <DragPreview<Channel> render={(ch) => <ChannelChipOverlay channel={ch} />} />
     </div>
   );
 }

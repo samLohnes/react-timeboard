@@ -178,6 +178,18 @@
   }
 }
 
+/* Overlay chip (portalled to document.body by DragOverlay). Inherits the
+   base .channel-chip styles; this modifier just lifts it and glows. */
+.channel-chip--dragging {
+  cursor: grabbing;
+  animation: none;
+  box-shadow:
+    0 0 0 1px var(--chip-brand),
+    0 24px 48px -12px rgba(0, 0, 0, 0.6),
+    0 0 24px var(--chip-brand);
+  transform: rotate(-1.5deg);
+}
+
 /* ---------- Status bar ---------- */
 .demo-stage {
   display: flex;
