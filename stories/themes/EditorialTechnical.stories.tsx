@@ -1,11 +1,17 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { ResourceTimeline } from '../../src';
+import { ResourceTimeline, useTimeboardDraggable } from '../../src';
 import {
-  THEME_EVENTS,
   THEME_GROUPS,
   THEME_RESOURCES,
   THEME_TIME_RANGE,
 } from './shared-data';
+import { useThemeDemoState, type DraggedTemplate } from './useThemeDemoState';
+
+const TEMPLATES: DraggedTemplate[] = [
+  { id: 'interview', label: 'Interview', durationHours: 1 },
+  { id: 'review', label: 'Editorial review', durationHours: 2 },
+  { id: 'office-hours', label: 'Office hours', durationHours: 1 },
+];
 
 /**
  * Editorial Technical — Fraunces display serif + Geist Mono on warm
@@ -19,6 +25,7 @@ const THEME_STYLES = `
   background: #fbf8f3;
   padding: 40px 48px;
   min-height: 100vh;
+  font-family: 'Fraunces', Georgia, serif;
 }
 
 .theme-editorial-stage .theme-editorial-heading {
@@ -40,6 +47,99 @@ const THEME_STYLES = `
   margin: 0 0 28px;
 }
 
+.theme-editorial-layout {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 32px;
+  align-items: start;
+}
+
+.theme-editorial-drafts {
+  padding: 20px 0 0;
+  border-top: 1px solid #e0d9cb;
+}
+
+.theme-editorial-drafts__title {
+  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #8a7a68;
+  margin: 0 0 16px;
+}
+
+.theme-editorial-drafts__hint {
+  font-family: 'Fraunces', Georgia, serif;
+  font-variation-settings: 'opsz' 12;
+  font-size: 13px;
+  font-style: italic;
+  color: #8a7a68;
+  margin: 18px 0 0;
+  line-height: 1.5;
+}
+
+.theme-editorial-chip {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: baseline;
+  gap: 12px;
+  padding: 10px 14px;
+  margin-bottom: 10px;
+  background: #fbf8f3;
+  border: 1px solid #e0d9cb;
+  border-left: 3px solid #c44818;
+  border-radius: 2px;
+  cursor: grab;
+  touch-action: none;
+  transition: box-shadow 160ms ease-out, transform 120ms ease-out, background 120ms ease-out;
+}
+
+.theme-editorial-chip:hover {
+  background: #f5f0e6;
+  box-shadow: 0 3px 12px rgba(74, 52, 24, 0.1);
+  transform: translateY(-1px);
+}
+
+.theme-editorial-chip:active {
+  cursor: grabbing;
+}
+
+.theme-editorial-chip__label {
+  font-family: 'Fraunces', Georgia, serif;
+  font-variation-settings: 'opsz' 14;
+  font-weight: 500;
+  font-size: 15px;
+  color: #1a1714;
+  letter-spacing: -0.005em;
+}
+
+.theme-editorial-chip__duration {
+  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: #8a7a68;
+  text-transform: uppercase;
+}
+
+.theme-editorial-reset {
+  margin-top: 18px;
+  appearance: none;
+  background: transparent;
+  border: 0;
+  padding: 6px 0;
+  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #c44818;
+  cursor: pointer;
+}
+
+.theme-editorial-reset:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
 .theme-editorial .rtb-root {
   --rtb-font-family: 'Fraunces', Georgia, serif;
   --rtb-font-mono: 'Geist Mono', ui-monospace, monospace;
@@ -54,7 +154,7 @@ const THEME_STYLES = `
   --rtb-cell-bg: #fbf8f3;
   --rtb-cell-bg-alt: #fbf8f3;
   --rtb-cell-border: #efebe1;
-  --rtb-cell-hover-bg: rgba(196, 72, 24, 0.08);
+  --rtb-cell-hover-bg: rgba(196, 72, 24, 0.1);
 
   --rtb-event-bg: #fbf8f3;
   --rtb-event-text: #1a1714;
@@ -121,6 +221,27 @@ const THEME_STYLES = `
 }
 `;
 
+function EditorialChip({ template }: { template: DraggedTemplate }) {
+  const { setNodeRef, attributes, listeners, isDragging, dragStyle } = useTimeboardDraggable({
+    id: `editorial-${template.id}`,
+    data: template,
+  });
+  return (
+    <div
+      ref={setNodeRef}
+      {...attributes}
+      {...listeners}
+      className="theme-editorial-chip"
+      style={{ ...dragStyle, opacity: isDragging ? 0.4 : 1 }}
+    >
+      <span className="theme-editorial-chip__label">{template.label}</span>
+      <span className="theme-editorial-chip__duration">
+        {template.durationHours}h
+      </span>
+    </div>
+  );
+}
+
 const meta: Meta = {
   title: 'Themes/Editorial Technical',
   parameters: {
@@ -131,24 +252,51 @@ const meta: Meta = {
 export default meta;
 
 export const Default: StoryObj = {
-  render: () => (
-    <>
-      <style>{THEME_STYLES}</style>
-      <div className="theme-editorial-stage">
-        <h1 className="theme-editorial-heading">The Schedule</h1>
-        <p className="theme-editorial-subhead">March 15, 2024 · Engineering &amp; Design</p>
-        <div className="theme-editorial">
-          <ResourceTimeline
-            resources={THEME_RESOURCES}
-            events={THEME_EVENTS}
-            timeRange={THEME_TIME_RANGE}
-            interval="hourly"
-            height={380}
-            groups={THEME_GROUPS}
-            ariaLabel="Editorial Technical theme demo"
-          />
-        </div>
-      </div>
-    </>
-  ),
+  render: () => {
+    const Demo = () => {
+      const { events, handleDrop, reset } = useThemeDemoState();
+      return (
+        <>
+          <style>{THEME_STYLES}</style>
+          <div className="theme-editorial-stage">
+            <h1 className="theme-editorial-heading">The Schedule</h1>
+            <p className="theme-editorial-subhead">
+              March 15, 2024 · Engineering &amp; Design
+            </p>
+            <div className="theme-editorial-layout">
+              <aside className="theme-editorial-drafts">
+                <h2 className="theme-editorial-drafts__title">Drafts</h2>
+                {TEMPLATES.map((t) => (
+                  <EditorialChip key={t.id} template={t} />
+                ))}
+                <p className="theme-editorial-drafts__hint">
+                  Drag a draft onto any cell to assign it.
+                </p>
+                <button
+                  type="button"
+                  className="theme-editorial-reset"
+                  onClick={reset}
+                >
+                  Reset
+                </button>
+              </aside>
+              <div className="theme-editorial">
+                <ResourceTimeline
+                  resources={THEME_RESOURCES}
+                  events={events}
+                  timeRange={THEME_TIME_RANGE}
+                  interval="hourly"
+                  height={420}
+                  groups={THEME_GROUPS}
+                  onExternalDrop={handleDrop}
+                  ariaLabel="Editorial Technical theme demo"
+                />
+              </div>
+            </div>
+          </div>
+        </>
+      );
+    };
+    return <Demo />;
+  },
 };
