@@ -1,18 +1,25 @@
 import * as React from 'react';
-import { ResourceLabel } from '../atoms';
-import type { BaseResource } from '../types';
+import { ResourceLabel, GroupHeader } from '../atoms';
+import type { RowPlanItem } from '../lib/grouping';
+import type { BaseResource, ResourceGroup } from '../types';
 
 export interface SidebarProps<TResource extends BaseResource> {
-  resources: TResource[];
-  /** Parallel to `resources`; pixel height per row. */
+  /** Row-plan items from `buildRowPlan`. Group headers and resources in render order. */
+  rows: RowPlanItem<TResource>[];
+  /** Parallel to `rows`; pixel height per row. */
   rowHeights: number[];
   renderResource?: (resource: TResource) => React.ReactNode;
+  renderGroupHeader?: (group: ResourceGroup, isExpanded: boolean) => React.ReactNode;
+  /** Fired when the user activates a group header's chevron. */
+  onGroupToggle: (groupId: string) => void;
 }
 
 function SidebarImpl<TResource extends BaseResource>({
-  resources,
+  rows,
   rowHeights,
   renderResource,
+  renderGroupHeader,
+  onGroupToggle,
 }: SidebarProps<TResource>) {
   return (
     <div
@@ -22,14 +29,35 @@ function SidebarImpl<TResource extends BaseResource>({
         gridTemplateRows: rowHeights.map((h) => `${h}px`).join(' '),
       }}
     >
-      {resources.map((resource, i) => (
-        <ResourceLabel key={resource.id} resourceId={resource.id} rowIndex={i}>
-          {renderResource ? renderResource(resource) : resource.label}
-        </ResourceLabel>
-      ))}
+      {rows.map((row) => {
+        if (row.kind === 'group-header') {
+          const customContent = renderGroupHeader
+            ? renderGroupHeader(row.group, row.isExpanded)
+            : undefined;
+          return (
+            <GroupHeader
+              key={`group-${row.group.id}`}
+              groupId={row.group.id}
+              label={row.group.label}
+              isExpanded={row.isExpanded}
+              onToggle={() => onGroupToggle(row.group.id)}
+            >
+              {customContent}
+            </GroupHeader>
+          );
+        }
+        return (
+          <ResourceLabel
+            key={row.resource.id}
+            resourceId={row.resource.id}
+            rowIndex={row.rowIndex}
+          >
+            {renderResource ? renderResource(row.resource) : row.resource.label}
+          </ResourceLabel>
+        );
+      })}
     </div>
   );
 }
 
-// React.memo erases the generic; cast preserves the signature.
 export const Sidebar = React.memo(SidebarImpl) as typeof SidebarImpl;

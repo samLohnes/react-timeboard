@@ -1,11 +1,12 @@
 import * as React from 'react';
-import { useCallback, useMemo, useRef } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { useDndMonitor } from '@dnd-kit/core';
 import { CornerCell, SpinnerOverlay } from './atoms';
 import { TimeAxis, Sidebar, Body } from './molecules';
 import { assignLanes, type LaneAssignmentResult } from './lib/lanes';
 import { generateColumns } from './lib/time';
 import { parseDropId } from './lib/dropId';
+import { buildRowPlan } from './lib/grouping';
 import type { BaseEvent, BaseResource, ResourceTimelineProps } from './types';
 
 const DEFAULT_LANE_HEIGHT = 28;
@@ -29,8 +30,13 @@ function ResourceTimelineImpl<
     timeRange,
     interval,
     height,
+    groups,
+    expandedGroupIds: controlledExpandedGroupIds,
+    defaultExpandedGroupIds,
+    onGroupToggle,
     renderEvent,
     renderResource,
+    renderGroupHeader,
     onEventClick,
     onCellClick,
     onExternalDrop,
@@ -41,15 +47,42 @@ function ResourceTimelineImpl<
   const columnWidth = props.columnWidth ?? defaultColumnWidth(interval);
   const laneHeight = props.laneHeight ?? DEFAULT_LANE_HEIGHT;
   const rowPadding = props.rowPadding ?? DEFAULT_ROW_PADDING;
-  // groupHeaderHeight is consumed in Task 8; we resolve it here so future-Task-8 logic has a ready value.
-  const _groupHeaderHeight = props.groupHeaderHeight ?? DEFAULT_GROUP_HEADER_HEIGHT;
-  void _groupHeaderHeight;
+  const groupHeaderHeight = props.groupHeaderHeight ?? DEFAULT_GROUP_HEADER_HEIGHT;
   const eventMarginX = DEFAULT_EVENT_MARGIN_X;
 
-  // Compare Dates via getTime() so memoization holds when consumers pass fresh Date instances
-  // with identical underlying timestamps.
   const rangeStartMs = timeRange.start.getTime();
   const rangeEndMs = timeRange.end.getTime();
+
+  // Uncontrolled expansion state. Initialized lazily from defaultExpandedGroupIds
+  // or — when neither controlled nor default is provided — all groups expanded.
+  const [uncontrolledExpanded, setUncontrolledExpanded] = useState<Set<string>>(() => {
+    if (controlledExpandedGroupIds !== undefined) return new Set(controlledExpandedGroupIds);
+    if (defaultExpandedGroupIds !== undefined) return new Set(defaultExpandedGroupIds);
+    if (groups) return new Set(groups.map((g) => g.id));
+    return new Set<string>();
+  });
+
+  const isControlled = controlledExpandedGroupIds !== undefined;
+  const expandedSet = useMemo(
+    () => (isControlled ? new Set(controlledExpandedGroupIds) : uncontrolledExpanded),
+    [isControlled, controlledExpandedGroupIds, uncontrolledExpanded],
+  );
+
+  const handleGroupToggle = useCallback(
+    (groupId: string) => {
+      const nextExpanded = !expandedSet.has(groupId);
+      onGroupToggle?.(groupId, nextExpanded);
+      if (!isControlled) {
+        setUncontrolledExpanded((prev) => {
+          const next = new Set(prev);
+          if (nextExpanded) next.add(groupId);
+          else next.delete(groupId);
+          return next;
+        });
+      }
+    },
+    [expandedSet, isControlled, onGroupToggle],
+  );
 
   const columns = useMemo(
     () => generateColumns(timeRange, interval),
@@ -57,9 +90,18 @@ function ResourceTimelineImpl<
     [rangeStartMs, rangeEndMs, interval],
   );
 
+  const rowPlan = useMemo(
+    () => buildRowPlan(resources, groups, expandedSet),
+    [resources, groups, expandedSet],
+  );
+
+  // Events grouped by VISIBLE resource only. Events for resources in collapsed
+  // groups are skipped — no lane computation wasted on off-screen rows.
   const eventsByResource = useMemo(() => {
+    const visibleIds = new Set(rowPlan.visibleResources.map((r) => r.id));
     const map = new Map<string, TEvent[]>();
     for (const event of events) {
+      if (!visibleIds.has(event.resourceId)) continue;
       const list = map.get(event.resourceId);
       if (list) {
         list.push(event);
@@ -68,27 +110,27 @@ function ResourceTimelineImpl<
       }
     }
     return map;
-  }, [events]);
+  }, [events, rowPlan.visibleResources]);
 
   const laneResultsByResource = useMemo(() => {
     const result = new Map<string, LaneAssignmentResult>();
-    for (const resource of resources) {
+    for (const resource of rowPlan.visibleResources) {
       const resourceEvents = eventsByResource.get(resource.id) ?? [];
       result.set(resource.id, assignLanes(resourceEvents, timeRange, interval));
     }
     return result;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [resources, eventsByResource, rangeStartMs, rangeEndMs, interval]);
+  }, [rowPlan.visibleResources, eventsByResource, rangeStartMs, rangeEndMs, interval]);
 
   const rowHeights = useMemo(() => {
-    return resources.map((resource) => {
-      const laneResult = laneResultsByResource.get(resource.id);
+    return rowPlan.rows.map((row) => {
+      if (row.kind === 'group-header') return groupHeaderHeight;
+      const laneResult = laneResultsByResource.get(row.resource.id);
       const laneCount = Math.max(1, laneResult?.laneCount ?? 1);
       return rowPadding * 2 + laneCount * laneHeight;
     });
-  }, [resources, laneResultsByResource, rowPadding, laneHeight]);
+  }, [rowPlan.rows, laneResultsByResource, groupHeaderHeight, rowPadding, laneHeight]);
 
-  // Body-as-scroll-authority: we drive the other two quadrants from its scroll event.
   const bodyScrollRef = useRef<HTMLDivElement>(null);
   const timeAxisScrollRef = useRef<HTMLDivElement>(null);
   const sidebarScrollRef = useRef<HTMLDivElement>(null);
@@ -103,8 +145,10 @@ function ResourceTimelineImpl<
     }
   }, []);
 
-  // Listen for drag-end events from the ancestor DndContext. We use `useDndMonitor`
-  // (not an owned DndContext) so consumers can keep draggables outside this component.
+  // Drops are only claimed if the target resource id is one of OUR visible rows;
+  // this prevents cross-firing between multiple timelines sharing one DndContext
+  // AND prevents drops onto cells belonging to resources hidden by a collapsed group
+  // (though the DOM doesn't render those cells anyway).
   useDndMonitor({
     onDragEnd: (event) => {
       if (loading) return;
@@ -112,8 +156,6 @@ function ResourceTimelineImpl<
       if (typeof overId !== 'string') return;
       const parsed = parseDropId(overId);
       if (!parsed) return;
-      // Only claim drops whose resourceId is in OUR resources list. Lets multiple
-      // ResourceTimelines coexist inside one DndContext without cross-firing.
       if (!resources.some((r) => r.id === parsed.resourceId)) return;
       onExternalDrop?.(event.active.data.current, parsed.resourceId, parsed.date);
     },
@@ -121,13 +163,14 @@ function ResourceTimelineImpl<
 
   const rootClassName = loading ? 'rtb-root rtb-root--loading' : 'rtb-root';
   const resolvedHeight = typeof height === 'number' ? `${height}px` : height;
+  const ariaRowCount = rowPlan.rows.length + 1;
 
   return (
     <div
       className={rootClassName}
       role="grid"
       aria-label={ariaLabel}
-      aria-rowcount={resources.length + 1}
+      aria-rowcount={ariaRowCount}
       aria-colcount={columns.length + 1}
       style={{
         display: 'grid',
@@ -155,9 +198,11 @@ function ResourceTimelineImpl<
         style={{ overflowX: 'hidden', overflowY: 'hidden' }}
       >
         <Sidebar<TResource>
-          resources={resources}
+          rows={rowPlan.rows}
           rowHeights={rowHeights}
           renderResource={renderResource}
+          renderGroupHeader={renderGroupHeader}
+          onGroupToggle={handleGroupToggle}
         />
       </div>
 
@@ -168,7 +213,7 @@ function ResourceTimelineImpl<
         onScroll={handleBodyScroll}
       >
         <Body<TEvent, TResource>
-          resources={resources}
+          rows={rowPlan.rows}
           columns={columns}
           columnWidth={columnWidth}
           rowHeights={rowHeights}
@@ -188,6 +233,4 @@ function ResourceTimelineImpl<
   );
 }
 
-// React.memo erases the generic parameters; the cast restores them so consumers get
-// typed `renderEvent={(e) => e.customField}` autocomplete from their TEvent.
 export const ResourceTimeline = React.memo(ResourceTimelineImpl) as typeof ResourceTimelineImpl;

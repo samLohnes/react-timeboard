@@ -2,8 +2,9 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { DndContext } from '@dnd-kit/core';
+import { useState } from 'react';
 import { ResourceTimeline } from './ResourceTimeline';
-import type { BaseEvent, BaseResource } from './types';
+import type { BaseEvent, BaseResource, ResourceGroup } from './types';
 
 function renderWithDnd(ui: React.ReactElement) {
   return render(<DndContext>{ui}</DndContext>);
@@ -228,5 +229,189 @@ describe('ResourceTimeline', () => {
 
     expect(timeAxis.scrollLeft).toBe(120);
     expect(sidebar.scrollTop).toBe(60);
+  });
+});
+
+// -----------------------------------------------------------------------------
+// Resource groups
+// -----------------------------------------------------------------------------
+
+const groupedResources: BaseResource[] = [
+  { id: 'alice', label: 'Alice', groupId: 'eng' },
+  { id: 'bob', label: 'Bob', groupId: 'eng' },
+  { id: 'carol', label: 'Carol', groupId: 'design' },
+];
+const groups: ResourceGroup[] = [
+  { id: 'eng', label: 'Engineering' },
+  { id: 'design', label: 'Design' },
+];
+
+describe('ResourceTimeline — resource groups', () => {
+  it('renders all groups expanded by default when neither expandedGroupIds nor defaultExpandedGroupIds is set', () => {
+    renderWithDnd(
+      <ResourceTimeline
+        resources={groupedResources}
+        events={[]}
+        timeRange={timeRange}
+        interval="hourly"
+        height={400}
+        groups={groups}
+      />,
+    );
+    expect(screen.getByText('Alice')).toBeTruthy();
+    expect(screen.getByText('Bob')).toBeTruthy();
+    expect(screen.getByText('Carol')).toBeTruthy();
+  });
+
+  it('respects defaultExpandedGroupIds in uncontrolled mode', () => {
+    renderWithDnd(
+      <ResourceTimeline
+        resources={groupedResources}
+        events={[]}
+        timeRange={timeRange}
+        interval="hourly"
+        height={400}
+        groups={groups}
+        defaultExpandedGroupIds={['eng']}
+      />,
+    );
+    // eng is expanded; design is collapsed → Carol is absent from the DOM.
+    expect(screen.getByText('Alice')).toBeTruthy();
+    expect(screen.queryByText('Carol')).toBeNull();
+  });
+
+  it('toggles uncontrolled expansion when the chevron is clicked and fires onGroupToggle', async () => {
+    const onGroupToggle = vi.fn();
+    renderWithDnd(
+      <ResourceTimeline
+        resources={groupedResources}
+        events={[]}
+        timeRange={timeRange}
+        interval="hourly"
+        height={400}
+        groups={groups}
+        onGroupToggle={onGroupToggle}
+      />,
+    );
+    expect(screen.getByText('Alice')).toBeTruthy();
+    await userEvent.click(screen.getByRole('button', { name: 'Collapse Engineering' }));
+    expect(onGroupToggle).toHaveBeenCalledWith('eng', false);
+    expect(screen.queryByText('Alice')).toBeNull();
+    expect(screen.queryByText('Bob')).toBeNull();
+  });
+
+  it('fires onGroupToggle but does NOT self-update when in controlled mode', async () => {
+    const onGroupToggle = vi.fn();
+    renderWithDnd(
+      <ResourceTimeline
+        resources={groupedResources}
+        events={[]}
+        timeRange={timeRange}
+        interval="hourly"
+        height={400}
+        groups={groups}
+        expandedGroupIds={['eng', 'design']}
+        onGroupToggle={onGroupToggle}
+      />,
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Collapse Engineering' }));
+    expect(onGroupToggle).toHaveBeenCalledWith('eng', false);
+    // Controlled — parent hasn't updated the prop, so Alice is still visible.
+    expect(screen.getByText('Alice')).toBeTruthy();
+  });
+
+  it('reflects parent state changes in controlled mode', async () => {
+    const ControlledHarness = () => {
+      const [expandedIds, setExpandedIds] = useState(['eng', 'design']);
+      return (
+        <ResourceTimeline
+          resources={groupedResources}
+          events={[]}
+          timeRange={timeRange}
+          interval="hourly"
+          height={400}
+          groups={groups}
+          expandedGroupIds={expandedIds}
+          onGroupToggle={(groupId, next) => {
+            setExpandedIds((prev) =>
+              next ? [...prev.filter((id) => id !== groupId), groupId] : prev.filter((id) => id !== groupId),
+            );
+          }}
+        />
+      );
+    };
+    renderWithDnd(<ControlledHarness />);
+    expect(screen.getByText('Alice')).toBeTruthy();
+    await userEvent.click(screen.getByRole('button', { name: 'Collapse Engineering' }));
+    expect(screen.queryByText('Alice')).toBeNull();
+  });
+
+  it('sets aria-rowcount to rowPlan.rows.length + 1 (includes headers + time-axis row)', () => {
+    // With 3 resources + 2 groups, both expanded: 2 headers + 3 resources = 5 rows + time axis = 6.
+    renderWithDnd(
+      <ResourceTimeline
+        resources={groupedResources}
+        events={[]}
+        timeRange={timeRange}
+        interval="hourly"
+        height={400}
+        groups={groups}
+      />,
+    );
+    expect(screen.getByRole('grid').getAttribute('aria-rowcount')).toBe('6');
+  });
+
+  it('updates aria-rowcount when a group is collapsed (collapsed members leave the DOM)', async () => {
+    renderWithDnd(
+      <ResourceTimeline
+        resources={groupedResources}
+        events={[]}
+        timeRange={timeRange}
+        interval="hourly"
+        height={400}
+        groups={groups}
+      />,
+    );
+    const grid = screen.getByRole('grid');
+    expect(grid.getAttribute('aria-rowcount')).toBe('6');
+    await userEvent.click(screen.getByRole('button', { name: 'Collapse Engineering' }));
+    // Headers still count; eng's 2 resources are removed → 4.
+    expect(grid.getAttribute('aria-rowcount')).toBe('4');
+  });
+
+  it('does NOT fire onExternalDrop for drops onto cells of resources in collapsed groups', async () => {
+    // Cells for collapsed-group resources aren't rendered, so there's nothing to drop on.
+    // Sanity check: no gridcell with aria-label referencing the collapsed resource exists.
+    const { container } = renderWithDnd(
+      <ResourceTimeline
+        resources={groupedResources}
+        events={[]}
+        timeRange={timeRange}
+        interval="hourly"
+        height={400}
+        groups={groups}
+        defaultExpandedGroupIds={['eng']}
+      />,
+    );
+    // Design is collapsed → Carol's row is not in the DOM.
+    // rtb-resource-row count = 2 (Alice + Bob), not 3.
+    expect(container.querySelectorAll('.rtb-resource-row')).toHaveLength(2);
+  });
+
+  it('uses renderGroupHeader to replace the label span content', () => {
+    renderWithDnd(
+      <ResourceTimeline
+        resources={groupedResources}
+        events={[]}
+        timeRange={timeRange}
+        interval="hourly"
+        height={400}
+        groups={groups}
+        renderGroupHeader={(g) => <strong>custom: {g.label}</strong>}
+      />,
+    );
+    expect(screen.getByText('custom: Engineering')).toBeTruthy();
+    // Chevron's aria-label still references the original label text.
+    expect(screen.getByRole('button', { name: 'Collapse Engineering' })).toBeTruthy();
   });
 });

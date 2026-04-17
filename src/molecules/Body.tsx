@@ -1,12 +1,13 @@
 import * as React from 'react';
 import { ResourceRow } from './ResourceRow';
+import type { RowPlanItem } from '../lib/grouping';
 import type { BaseEvent, BaseResource } from '../types';
 
 export interface BodyProps<TEvent extends BaseEvent, TResource extends BaseResource> {
-  resources: TResource[];
+  rows: RowPlanItem<TResource>[];
   columns: Date[];
   columnWidth: number;
-  /** Parallel to `resources`; pixel height per row. */
+  /** Parallel to `rows`; pixel height per row. */
   rowHeights: number[];
   laneHeight: number;
   rowPadding: number;
@@ -32,7 +33,7 @@ const EMPTY_LANE_RESULT = {
 };
 
 function BodyImpl<TEvent extends BaseEvent, TResource extends BaseResource>({
-  resources,
+  rows,
   columns,
   columnWidth,
   rowHeights,
@@ -55,14 +56,25 @@ function BodyImpl<TEvent extends BaseEvent, TResource extends BaseResource>({
         gridTemplateColumns: `${columns.length * columnWidth}px`,
       }}
     >
-      {resources.map((resource, i) => {
-        const resourceEvents = eventsByResource.get(resource.id) ?? [];
-        const laneResult = laneResultsByResource.get(resource.id) ?? EMPTY_LANE_RESULT;
+      {rows.map((row) => {
+        if (row.kind === 'group-header') {
+          // Body-side group header row is a visual spacer — no cells, no drop targets.
+          return (
+            <div
+              key={`group-body-${row.group.id}`}
+              className="rtb-group-header-body"
+              role="presentation"
+              aria-hidden="true"
+            />
+          );
+        }
+        const resourceEvents = eventsByResource.get(row.resource.id) ?? [];
+        const laneResult = laneResultsByResource.get(row.resource.id) ?? EMPTY_LANE_RESULT;
         return (
           <ResourceRow<TEvent>
-            key={resource.id}
-            resourceId={resource.id}
-            rowIndex={i}
+            key={row.resource.id}
+            resourceId={row.resource.id}
+            rowIndex={row.rowIndex}
             columns={columns}
             columnWidth={columnWidth}
             laneHeight={laneHeight}
