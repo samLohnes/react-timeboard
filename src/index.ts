@@ -5,3 +5,4 @@ export type {
   IntervalMode,
   ResourceTimelineProps,
 } from './types';
+export { ResourceTimeline } from './ResourceTimeline';
