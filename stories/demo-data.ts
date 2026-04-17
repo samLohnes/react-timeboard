@@ -15,13 +15,15 @@ export interface Channel extends BaseResource {
   brandColor: string;
 }
 
+// Fictional channels + networks — no trademarks. Networks become row groups
+// in channels view; brandColor drives the chip accent in both views.
 export const CHANNELS: Channel[] = [
-  { id: 'espn', label: 'ESPN', network: 'ESPN', brandColor: '#CC0000' },
-  { id: 'espn2', label: 'ESPN2', network: 'ESPN', brandColor: '#7B0000' },
-  { id: 'tbs', label: 'TBS', network: 'Turner', brandColor: '#003865' },
-  { id: 'tnt', label: 'TNT', network: 'Turner', brandColor: '#E30613' },
-  { id: 'cbs', label: 'CBS', network: 'CBS', brandColor: '#003399' },
-  { id: 'trutv', label: 'truTV', network: 'Turner', brandColor: '#00A651' },
+  { id: 'atlas', label: 'Atlas Sport', network: 'Atlas Media', brandColor: '#CC0033' },
+  { id: 'atlas2', label: 'Atlas 2', network: 'Atlas Media', brandColor: '#8B0020' },
+  { id: 'prime', label: 'Prime Arena', network: 'Prime Sports', brandColor: '#003865' },
+  { id: 'meridian', label: 'Meridian', network: 'Prime Sports', brandColor: '#E30613' },
+  { id: 'skyline', label: 'Skyline', network: 'Skyline Broadcasting', brandColor: '#1A3A8A' },
+  { id: 'vanguard', label: 'Vanguard', network: 'Prime Sports', brandColor: '#00A651' },
 ];
 
 export const SPORT_GROUPS: ResourceGroup[] = [
@@ -32,33 +34,34 @@ export const SPORT_GROUPS: ResourceGroup[] = [
 
 /** Network groups used when the demo is flipped to a channels-per-row view. */
 export const NETWORK_GROUPS: ResourceGroup[] = [
-  { id: 'ESPN', label: '📡 ESPN' },
-  { id: 'Turner', label: '📡 Turner Sports' },
-  { id: 'CBS', label: '📡 CBS' },
+  { id: 'Atlas Media', label: '📡 Atlas Media' },
+  { id: 'Prime Sports', label: '📡 Prime Sports' },
+  { id: 'Skyline Broadcasting', label: '📡 Skyline Broadcasting' },
 ];
 
 function makeTime(hour: number, minute = 0): Date {
   return new Date(2024, 2, 15, hour, minute);
 }
 
+// Fictional matchups — no real teams. Kept short so cards don't overflow.
 export const INITIAL_GAMES: BroadcastGame[] = [
   {
     id: 'g1',
     resourceId: 'g1',
     sport: 'basketball',
-    homeTeam: 'Duke',
-    awayTeam: 'Kansas',
+    homeTeam: 'Ridgewood',
+    awayTeam: 'Ashford',
     tipOffTime: makeTime(12, 30),
     start: makeTime(12, 30),
     end: makeTime(14, 30),
-    assignedChannels: ['espn'],
+    assignedChannels: ['atlas'],
   },
   {
     id: 'g2',
     resourceId: 'g2',
     sport: 'basketball',
-    homeTeam: 'UNC',
-    awayTeam: 'Gonzaga',
+    homeTeam: 'Kingsbridge',
+    awayTeam: 'Belmont',
     tipOffTime: makeTime(14, 0),
     start: makeTime(14, 0),
     end: makeTime(16, 0),
@@ -68,19 +71,19 @@ export const INITIAL_GAMES: BroadcastGame[] = [
     id: 'g3',
     resourceId: 'g3',
     sport: 'basketball',
-    homeTeam: 'UCLA',
-    awayTeam: 'Arizona',
+    homeTeam: 'Westhaven',
+    awayTeam: 'Clearwater',
     tipOffTime: makeTime(15, 30),
     start: makeTime(15, 30),
     end: makeTime(17, 30),
-    assignedChannels: ['tbs'],
+    assignedChannels: ['prime'],
   },
   {
     id: 'g4',
     resourceId: 'g4',
     sport: 'basketball',
-    homeTeam: 'Kentucky',
-    awayTeam: 'Purdue',
+    homeTeam: 'Foxcrest',
+    awayTeam: 'Norcross',
     tipOffTime: makeTime(17, 0),
     start: makeTime(17, 0),
     end: makeTime(19, 0),
@@ -90,8 +93,8 @@ export const INITIAL_GAMES: BroadcastGame[] = [
     id: 'g5',
     resourceId: 'g5',
     sport: 'hockey',
-    homeTeam: 'Rangers',
-    awayTeam: 'Bruins',
+    homeTeam: 'Ironport',
+    awayTeam: 'Blackburn',
     tipOffTime: makeTime(13, 0),
     start: makeTime(13, 0),
     end: makeTime(15, 30),
@@ -101,19 +104,19 @@ export const INITIAL_GAMES: BroadcastGame[] = [
     id: 'g6',
     resourceId: 'g6',
     sport: 'hockey',
-    homeTeam: 'Maple Leafs',
-    awayTeam: 'Canadiens',
+    homeTeam: 'Frostpeak',
+    awayTeam: 'Silvermoor',
     tipOffTime: makeTime(19, 0),
     start: makeTime(19, 0),
     end: makeTime(21, 30),
-    assignedChannels: ['tnt'],
+    assignedChannels: ['meridian'],
   },
   {
     id: 'g7',
     resourceId: 'g7',
     sport: 'soccer',
-    homeTeam: 'LAFC',
-    awayTeam: 'Seattle',
+    homeTeam: 'Harborlight',
+    awayTeam: 'Crestvale',
     tipOffTime: makeTime(15, 0),
     start: makeTime(15, 0),
     end: makeTime(17, 0),
@@ -123,8 +126,8 @@ export const INITIAL_GAMES: BroadcastGame[] = [
     id: 'g8',
     resourceId: 'g8',
     sport: 'soccer',
-    homeTeam: 'NYCFC',
-    awayTeam: 'Atlanta',
+    homeTeam: 'Stonewall',
+    awayTeam: 'Redleaf',
     tipOffTime: makeTime(18, 0),
     start: makeTime(18, 0),
     end: makeTime(20, 0),
@@ -134,8 +137,8 @@ export const INITIAL_GAMES: BroadcastGame[] = [
     id: 'g9',
     resourceId: 'g9',
     sport: 'soccer',
-    homeTeam: 'Portland',
-    awayTeam: 'San Jose',
+    homeTeam: 'Sunvale',
+    awayTeam: 'Gulfport',
     tipOffTime: makeTime(20, 30),
     start: makeTime(20, 30),
     end: makeTime(22, 30),

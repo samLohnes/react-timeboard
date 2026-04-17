@@ -24,7 +24,7 @@ function formatTime(d: Date): string {
   return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
 }
 
-export interface MarchMadnessDemoProps {
+export interface SportsBroadcastDemoProps {
   /**
    * Games view only. When `true`, a channel can be assigned to multiple games
    * whose time ranges overlap. When `false` (default), overlapping assignments
@@ -54,9 +54,9 @@ interface ChannelsViewConfig {
 
 type ViewConfig = GamesViewConfig | ChannelsViewConfig;
 
-export function MarchMadnessDemo({
+export function SportsBroadcastDemo({
   allowOverlappingChannelAssignments = false,
-}: MarchMadnessDemoProps) {
+}: SportsBroadcastDemoProps) {
   const [games, setGames] = useState<BroadcastGame[]>(INITIAL_GAMES);
   const [view, setView] = useState<ViewMode>('games');
   const { toast, showToast } = useConflictToast();
@@ -201,8 +201,8 @@ export function MarchMadnessDemo({
             renderEvent={viewConfig.renderEvent as (event: BaseEvent) => ReactNode}
             ariaLabel={
               viewConfig.mode === 'games'
-                ? 'March Madness broadcast schedule, by game'
-                : 'March Madness broadcast schedule, by channel'
+                ? 'Sports broadcast schedule, by game'
+                : 'Sports broadcast schedule, by channel'
             }
           />
         </div>
