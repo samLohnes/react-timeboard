@@ -9,6 +9,7 @@ storybook-static/
 .env.*
 !.env.example
 
-# Local-only Storybook scratchpad (will be replaced by Task 10's stories/)
-.storybook/
+# Local-only Storybook scratchpad — dev stories stay ignored.
+# The committed Storybook config (.storybook/) and the MarchMadness demo
+# (stories/) are tracked; local experiments live in dev-stories/.
 dev-stories/
