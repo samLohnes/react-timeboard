@@ -4,6 +4,8 @@ A TypeScript-first React component library for resource × time grids with exter
 
 **Status:** v0.0.1 (pre-release)
 
+![Dragging a channel chip onto a game in the SportsBroadcast demo](./assets/GamesHero.gif)
+
 ## Features
 
 - Resources on the Y-axis, time on the X-axis. Drop external items onto `{resource, date}` cells.
@@ -15,6 +17,10 @@ A TypeScript-first React component library for resource × time grids with exter
 - Clean default styling, fully themeable via `--rtb-*` CSS custom properties. No CSS-in-JS.
 - ESM + CJS builds. Vite library mode. TypeScript declarations included.
 - `@dnd-kit/core` as a peer dependency; no bundled drag-and-drop code.
+
+The library is generic over your data, so the same board can be flipped to tell a different story. Below, the SportsBroadcast demo switches from games-as-rows to channels-as-rows — same underlying data, two analytical views:
+
+![Channels view — channels as rows grouped by network, games as bookings](./assets/ChannelsView.png)
 
 ## Install
 
@@ -149,6 +155,10 @@ All colors, sizes, and spacings are CSS custom properties prefixed `--rtb-*`. Ov
 ```
 
 **Full variable reference:** see [`src/styles.css`](./src/styles.css).
+
+The Storybook ships several full-theme demos that exercise the variable system end-to-end. Here's the "Editorial Technical" theme — Fraunces + Geist Mono on unbleached paper with burnt-sienna accents, all from `--rtb-*` overrides:
+
+![Editorial Technical theme — cream paper, serif typography, burnt-sienna accents](./assets/TechnicalSchedule.png)
 
 ### Dark mode
 
